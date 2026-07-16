@@ -1,2 +1,11 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+* text=auto eol=lf
+
+*.cs text
+*.csproj text
+*.sln text
+*.slnx text
+*.json text
+*.yml text
+*.yaml text
+*.md text
+*.sql text
