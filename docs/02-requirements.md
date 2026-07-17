@@ -164,38 +164,46 @@ Users can track progress toward locked achievements.
 Users can create a Developer Profile.
 
 ### FR-033
-Developers can submit new games for review.
+Developer Profiles contain:
+
+- Display Name
+- Biography
+- Website
+- Logo
 
 ### FR-034
-Developers can edit their own games.
+Developers can submit games for review.
 
 ### FR-035
-Developers can upload game cover images and screenshots.
+Developers can edit their own published games.
 
 ### FR-036
-Developers can publish updates and patch notes.
+Developers can upload cover images and screenshots.
 
 ### FR-037
+Developers can publish updates and patch notes.
+
+### FR-038
 Developers can view analytics for their published games.
 
 ---
 
 # Administration
 
-### FR-038
+### FR-039
 Administrators can approve or reject submitted games.
 
-### FR-039
+### FR-040
 Administrators can manage users.
 
-### FR-040
+### FR-041
 Administrators can moderate reported reviews.
 
-### FR-041
+### FR-042
 Administrators can manage discounts.
 
-### FR-042
-Administrators can suspend developer accounts.
+### FR-043
+Administrators can suspend developer profiles.
 
 ---
 
@@ -232,7 +240,7 @@ Administrators can suspend developer accounts.
 - Modular Monolith architecture
 - Repository abstraction
 - Dependency Injection
-- Future migration path to microservices if needed
+- Future migration path to microservices if required
 
 ## Deployment
 

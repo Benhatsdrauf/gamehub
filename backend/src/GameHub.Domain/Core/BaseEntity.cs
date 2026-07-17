@@ -1,4 +1,4 @@
-namespace GameHub.Domain.Common;
+namespace GameHub.Domain.Core;
 
 public abstract class BaseEntity
 {

@@ -2,11 +2,11 @@
 
 ## Overview
 
-GameHub is designed as a modern full-stack application following the principles of Clean Architecture.
+GameHub is a modern full-stack application built using ASP.NET Core and React.
 
-The application is built as a modular monolith. While all functionality is deployed as a single application, each feature is organized into independent modules with clearly defined responsibilities. This approach provides the simplicity of a monolithic application while maintaining a clean separation of concerns and allowing future expansion.
+The backend follows the principles of Clean Architecture while organizing features using Vertical Slice Architecture. The application is implemented as a **Modular Monolith**, providing clear boundaries between modules while remaining simple to develop, test, and deploy.
 
-The architecture emphasizes maintainability, scalability, and testability over unnecessary complexity.
+The architecture prioritizes maintainability, readability, scalability, and testability over unnecessary complexity. Dependencies always point inward, keeping the business domain independent from frameworks and infrastructure.  [oai_citation:0‡Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/common-web-application-architectures?utm_source=chatgpt.com)
 
 ---
 
@@ -34,13 +34,15 @@ The architecture emphasizes maintainability, scalability, and testability over u
 
 # Architectural Principles
 
-The project follows several core principles:
+GameHub follows these principles:
 
 - Clean Architecture
 - SOLID Principles
 - Separation of Concerns
 - Dependency Injection
+- Vertical Slice Architecture
 - Domain-Driven Design (lightweight)
+- Feature-first organization
 - Test-Driven mindset where appropriate
 
 ---
@@ -51,16 +53,52 @@ The project follows several core principles:
 backend/
 
 src/
-│
+
 ├── GameHub.API
 ├── GameHub.Application
 ├── GameHub.Domain
 └── GameHub.Infrastructure
 
 tests/
-│
+
 ├── GameHub.UnitTests
 └── GameHub.IntegrationTests
+```
+
+---
+
+# Domain Structure
+
+```
+GameHub.Domain
+
+├── Common
+├── Models
+├── ValueObjects
+├── Events
+└── Enums
+```
+
+Models will contain our core business concepts.
+
+Example:
+
+```
+Models/
+
+User
+
+DeveloperProfile
+
+Game
+
+Genre
+
+Review
+
+Purchase
+
+Achievement
 ```
 
 ---
@@ -71,13 +109,15 @@ tests/
 
 Responsible for:
 
-- REST Controllers
-- Authentication
+- Controllers
+- Authentication configuration
 - Authorization
 - Middleware
 - Dependency Injection
 - Swagger
 - API Versioning
+
+The API should contain no business logic.
 
 ---
 
@@ -85,12 +125,29 @@ Responsible for:
 
 Responsible for:
 
-- Business Logic
+- Business workflows
+- Commands
+- Queries
 - DTOs
 - Interfaces
 - Validation
-- Use Cases
-- Services
+- Application Services
+
+Features are organized vertically.
+
+Example:
+
+```
+Games/
+
+Commands/
+
+Queries/
+
+DTOs/
+
+Validators/
+```
 
 ---
 
@@ -98,13 +155,13 @@ Responsible for:
 
 Responsible for:
 
-- Entities
+- Business Models
 - Enums
-- Domain Rules
 - Value Objects
 - Domain Events
+- Business Rules
 
-The Domain layer contains the business logic and must not depend on any external framework.
+The Domain layer has **no dependency** on ASP.NET Core, Entity Framework, PostgreSQL, or any external framework.  [oai_citation:1‡Clean Architecture](https://cleanarchitecture.jasontaylor.dev/docs/architecture/?utm_source=chatgpt.com)
 
 ---
 
@@ -114,11 +171,14 @@ Responsible for:
 
 - Entity Framework Core
 - PostgreSQL
-- Repository Implementations
-- Authentication Providers
+- Repository implementations
+- Authentication
 - Logging
 - File Storage
-- External Services
+- External APIs
+- Email
+
+Infrastructure implements the abstractions defined by the Application layer.
 
 ---
 
@@ -136,7 +196,7 @@ Application
 Domain
 ```
 
-The Domain layer never references Infrastructure or API.
+The Domain layer never depends on any outer layer.
 
 ---
 
@@ -150,7 +210,6 @@ The Domain layer never references Infrastructure or API.
 - PostgreSQL
 - JWT Authentication
 - FluentValidation
-- AutoMapper (where appropriate)
 - Serilog
 - xUnit
 
@@ -184,35 +243,74 @@ The Domain layer never references Infrastructure or API.
 | Repository | Data access |
 | Factory | Notification creation |
 | Strategy | Discount calculations |
-| Observer | Notifications and achievements |
-| Builder | Complex game creation |
+| Observer | Notifications & Achievements |
+| Builder | Complex Game creation |
 | Adapter | External game integrations |
-| Decorator | Logging and caching |
+| Decorator | Logging & Caching |
 | Dependency Injection | Service composition |
 
-Patterns will only be introduced when they solve an actual problem within the application.
+Patterns will only be introduced when they solve a real problem.
 
 ---
 
-# User Roles
+# User Model
 
-## Player
+Every authenticated person is represented by a **User**.
+
+A User can optionally create a **DeveloperProfile**.
+
+Creating a DeveloperProfile grants publishing capabilities while the user still retains all normal user functionality.
+
+```
+User
+ │
+ ├── Library
+ ├── Wishlist
+ ├── Friends
+ ├── Reviews
+ └── DeveloperProfile (optional)
+           │
+           └── Games
+```
+
+This models the business domain more accurately than using inheritance or a dedicated Developer role.
+
+---
+
+# User Types
+
+## User
+
+Every authenticated account is a User.
+
+Users can:
 
 - Purchase games
-- Leave reviews
-- Manage library
+- Maintain a library
+- Create reviews
 - Add friends
 - Unlock achievements
-- Maintain wishlist
+- Maintain a wishlist
+
+Users may optionally create a Developer Profile.
 
 ---
 
-## Developer
+## Developer Profile
 
-- Create developer profile
+A Developer Profile extends a User's capabilities.
+
+It contains:
+
+- Display Name
+- Biography
+- Website
+- Logo
+
+Developers can:
+
 - Submit games
-- Update games
-- Publish patch notes
+- Publish updates
 - Upload screenshots
 - View analytics
 
@@ -220,11 +318,37 @@ Patterns will only be introduced when they solve an actual problem within the ap
 
 ## Administrator
 
-- Approve game submissions
+Administrators have elevated permissions.
+
+Administrators can:
+
+- Approve or reject games
 - Moderate reviews
 - Manage users
 - Manage discounts
-- Suspend developers
+- Suspend developer profiles
+
+---
+
+# Planned Domain Model
+
+```
+User
+│
+├── Library
+├── Wishlist
+├── Reviews
+├── Friends
+└── DeveloperProfile (optional)
+          │
+          └── Games
+                  │
+                  ├── Genres
+                  ├── Platforms
+                  ├── Reviews
+                  ├── Screenshots
+                  └── Achievements
+```
 
 ---
 
@@ -248,13 +372,13 @@ Potential future features include:
 
 # Architecture Goals
 
-The primary goals of this architecture are:
+The architecture is designed to provide:
 
 - Maintainability
+- Readability
 - Scalability
 - Testability
-- Readability
 - Flexibility
 - Professional software engineering practices
 
-The architecture should allow the application to grow without requiring significant restructuring while remaining approachable for new contributors.
+As the application evolves, this document will evolve alongside it. It is intended to be a living document rather than static documentation.

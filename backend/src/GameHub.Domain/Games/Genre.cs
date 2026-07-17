@@ -1,6 +1,6 @@
-using GameHub.Domain.Common;
+using GameHub.Domain.Core;
 
-namespace GameHub.Domain.Entities;
+namespace GameHub.Domain.Games;
 
 public sealed class Genre : BaseEntity
 {
