@@ -1,5 +1,6 @@
 using GameHub.Application;
 using GameHub.Infrastructure;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    // Interactive API testing UI (Development only), served at /scalar.
+    app.MapScalarApiReference();
 }
 
 app.UseAuthorization();
