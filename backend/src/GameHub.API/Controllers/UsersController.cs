@@ -1,4 +1,5 @@
 using GameHub.API.Contracts.Users;
+using GameHub.Application.Users.DeleteUser;
 using GameHub.Application.Users.GetUser;
 using GameHub.Application.Users.GetUsers;
 using GameHub.Application.Users.RegisterUser;
@@ -13,17 +14,20 @@ public sealed class UsersController : ApiController
     private readonly GetUserHandler _getUserHandler;
     private readonly GetUsersHandler _getUsersHandler;
     private readonly UpdateUserHandler _updateUserHandler;
+    private readonly DeleteUserHandler _deleteUserHandler;
 
     public UsersController(
         RegisterUserHandler registerUserHandler,
         GetUserHandler getUserHandler,
         GetUsersHandler getUsersHandler,
-        UpdateUserHandler updateUserHandler)
+        UpdateUserHandler updateUserHandler,
+        DeleteUserHandler deleteUserHandler)
     {
         _registerUserHandler = registerUserHandler;
         _getUserHandler = getUserHandler;
         _getUsersHandler = getUsersHandler;
         _updateUserHandler = updateUserHandler;
+        _deleteUserHandler = deleteUserHandler;
     }
 
     [HttpPost]
@@ -80,6 +84,16 @@ public sealed class UsersController : ApiController
 
         return result.IsSuccess
             ? Ok(result.Value)
+            : Problem(result.Error);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _deleteUserHandler.Handle(new DeleteUserCommand(id), cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
             : Problem(result.Error);
     }
 }

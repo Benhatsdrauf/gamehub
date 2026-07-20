@@ -1,4 +1,5 @@
 using FluentValidation;
+using GameHub.Application.Users.DeleteUser;
 using GameHub.Application.Users.GetUser;
 using GameHub.Application.Users.GetUsers;
 using GameHub.Application.Users.RegisterUser;
@@ -17,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<GetUserHandler>();
         services.AddScoped<GetUsersHandler>();
         services.AddScoped<UpdateUserHandler>();
+        services.AddScoped<DeleteUserHandler>();
 
         // Registers every AbstractValidator in this assembly (e.g.
         // RegisterUserCommandValidator) as IValidator<T> for injection.

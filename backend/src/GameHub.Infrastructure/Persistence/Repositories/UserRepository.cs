@@ -31,6 +31,13 @@ public sealed class UserRepository : IUserRepository
         // SaveChanges writes only the columns that actually changed.
         SaveChangesAsync(cancellationToken);
 
+    public async Task DeleteAsync(User user, CancellationToken cancellationToken = default)
+    {
+        // Remove marks the tracked entity as Deleted; SaveChanges issues the DELETE.
+        _dbContext.Users.Remove(user);
+        await SaveChangesAsync(cancellationToken);
+    }
+
     public Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default) =>
         _dbContext.Users.AnyAsync(user => user.Email == email, cancellationToken);
 
