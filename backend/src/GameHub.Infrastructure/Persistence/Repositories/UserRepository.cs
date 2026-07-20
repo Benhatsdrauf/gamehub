@@ -14,10 +14,40 @@ public sealed class UserRepository : IUserRepository
         _dbContext = dbContext;
     }
 
+    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        // No projection, no AsNoTracking: EF tracks this entity, so later mutations
+        // are detected and persisted on SaveChanges.
+        _dbContext.Users.FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
+
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
         _dbContext.Users.Add(user);
+        await SaveChangesAsync(cancellationToken);
+    }
 
+    public Task UpdateAsync(User user, CancellationToken cancellationToken = default) =>
+        // The user was loaded via GetByIdAsync in this same request, so it is already
+        // tracked. We do NOT call Update() (that force-marks every column modified);
+        // SaveChanges writes only the columns that actually changed.
+        SaveChangesAsync(cancellationToken);
+
+    public Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default) =>
+        _dbContext.Users.AnyAsync(user => user.Email == email, cancellationToken);
+
+    public Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken = default) =>
+        _dbContext.Users.AnyAsync(user => user.Username == username, cancellationToken);
+
+    public Task<bool> EmailExistsForOtherUserAsync(string email, Guid userId, CancellationToken cancellationToken = default) =>
+        _dbContext.Users.AnyAsync(user => user.Email == email && user.Id != userId, cancellationToken);
+
+    public Task<bool> UsernameExistsForOtherUserAsync(string username, Guid userId, CancellationToken cancellationToken = default) =>
+        _dbContext.Users.AnyAsync(user => user.Username == username && user.Id != userId, cancellationToken);
+
+    // Shared by AddAsync and UpdateAsync: persists pending changes and translates a
+    // database unique-violation (the race-loser) into a domain exception, so EF/Npgsql
+    // types never escape Infrastructure.
+    private async Task SaveChangesAsync(CancellationToken cancellationToken)
+    {
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -25,22 +55,13 @@ public sealed class UserRepository : IUserRepository
         catch (DbUpdateException ex)
             when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } postgres)
         {
-            // The app-level pre-check missed a concurrent insert (TOCTOU race).
-            // Translate the raw database violation into a domain-meaningful
-            // exception so the EF/Npgsql types stay sealed inside Infrastructure.
             if (postgres.ConstraintName == UserConstraintNames.UniqueEmail)
                 throw new DuplicateEmailException();
 
             if (postgres.ConstraintName == UserConstraintNames.UniqueUsername)
                 throw new DuplicateUsernameException();
 
-            throw; // a unique violation we don't specifically handle — preserve the original
+            throw;
         }
     }
-
-    public Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default) =>
-        _dbContext.Users.AnyAsync(u => u.Email == email, cancellationToken);
-
-    public Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken = default) =>
-        _dbContext.Users.AnyAsync(u => u.Username == username, cancellationToken);
 }
