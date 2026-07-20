@@ -1,5 +1,6 @@
 using FluentValidation;
 using GameHub.Application.Users.GetUser;
+using GameHub.Application.Users.GetUsers;
 using GameHub.Application.Users.RegisterUser;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +14,7 @@ public static class DependencyInjection
         // A service must never outlive its dependencies.
         services.AddScoped<RegisterUserHandler>();
         services.AddScoped<GetUserHandler>();
+        services.AddScoped<GetUsersHandler>();
 
         // Registers every AbstractValidator in this assembly (e.g.
         // RegisterUserCommandValidator) as IValidator<T> for injection.

@@ -1,4 +1,6 @@
+using GameHub.Application.Common.Pagination;
 using GameHub.Application.Users.GetUser;
+using GameHub.Application.Users.GetUsers;
 
 namespace GameHub.Application.Users;
 
@@ -7,4 +9,6 @@ namespace GameHub.Application.Users;
 public interface IUserQueries
 {
     Task<GetUserResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<PagedResponse<UserListItem>> GetUsersAsync(int page, int pageSize, CancellationToken cancellationToken = default);
 }

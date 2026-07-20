@@ -1,5 +1,6 @@
 using GameHub.API.Contracts.Users;
 using GameHub.Application.Users.GetUser;
+using GameHub.Application.Users.GetUsers;
 using GameHub.Application.Users.RegisterUser;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,13 +10,16 @@ public sealed class UsersController : ApiController
 {
     private readonly RegisterUserHandler _registerUserHandler;
     private readonly GetUserHandler _getUserHandler;
+    private readonly GetUsersHandler _getUsersHandler;
 
     public UsersController(
         RegisterUserHandler registerUserHandler,
-        GetUserHandler getUserHandler)
+        GetUserHandler getUserHandler,
+        GetUsersHandler getUsersHandler)
     {
         _registerUserHandler = registerUserHandler;
         _getUserHandler = getUserHandler;
+        _getUsersHandler = getUsersHandler;
     }
 
     [HttpPost]
@@ -32,6 +36,21 @@ public sealed class UsersController : ApiController
 
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value)
+            : Problem(result.Error);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _getUsersHandler.Handle(
+            new GetUsersQuery(page, pageSize),
+            cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
             : Problem(result.Error);
     }
 
