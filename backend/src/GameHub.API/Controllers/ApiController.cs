@@ -12,6 +12,19 @@ public abstract class ApiController : ControllerBase
     // the Application layer never knows what a "409" is.
     protected IActionResult Problem(Error error)
     {
+        // Validation failures carry many per-field messages, so they map to the
+        // standard ValidationProblemDetails shape rather than a single ProblemDetails.
+        if (error is ValidationError validationError)
+        {
+            var validationProblem = new ValidationProblemDetails(
+                validationError.Errors.ToDictionary(entry => entry.Key, entry => entry.Value))
+            {
+                Status = StatusCodes.Status400BadRequest
+            };
+
+            return new ObjectResult(validationProblem) { StatusCode = StatusCodes.Status400BadRequest };
+        }
+
         var statusCode = error.Type switch
         {
             ErrorType.Validation => StatusCodes.Status400BadRequest,
