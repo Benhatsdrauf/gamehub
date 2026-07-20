@@ -239,14 +239,40 @@ See `08-pagination.md` for the full offset-vs-keyset comparison and rationale.
 
 ## Frontend
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- TanStack Query
-- React Hook Form
-- Zod
-- Axios
+- React + TypeScript
+- Vite (build & dev server)
+- TanStack Router (type-safe routing)
+- TanStack Query (server state / data fetching)
+- TanStack Table (headless data tables)
+- shadcn/ui (components on Radix + Tailwind; form-agnostic `Field` primitives)
+- Tailwind CSS (styling)
+- TanStack Form + Zod (forms & client-side validation via Standard Schema)
+
+### Rendering: client-rendered SPA (no SSR, for now)
+
+The frontend is a **client-rendered single-page app** that consumes the .NET API.
+We are **not** using TanStack Start (SSR/full-stack) at this stage.
+
+**Why:** the backend is ASP.NET Core, so TanStack Start's main value — server
+functions / full-stack — is already provided by the API. Adopting Start now would
+add a second server runtime and an SSR pipeline mainly to gain SSR, whose payoffs
+(SEO, fast first paint) matter only for the future *public* storefront, which is
+several phases away. TanStack Router as a standalone SPA gives the same type-safe
+routing without that complexity.
+
+**Future trigger:** when the public, SEO-relevant storefront becomes a real goal,
+migrate to TanStack Start (it is built on TanStack Router, so this is an upgrade
+path rather than a rewrite).
+
+### Forms: TanStack Form (not React Hook Form)
+
+**Why:** the frontend is already on TanStack Router, Query, and Table, so
+TanStack Form keeps the stack a single cohesive family (one mental model, shared
+devtools) and offers stronger TypeScript inference — consistent with the
+type-safety goal that runs through the whole project. Since October 2025,
+shadcn/ui's `Field` component is form-library-agnostic and officially supports
+TanStack Form, removing the historical reason to default to React Hook Form.
+Zod remains the schema validator (via Standard Schema).
 
 ---
 
