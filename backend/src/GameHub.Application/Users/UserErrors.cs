@@ -13,4 +13,9 @@ public static class UserErrors
         "User.UsernameNotUnique",
         $"A user with the username '{username}' already exists.",
         ErrorType.Conflict);
+
+    public static Error NotFound(Guid id) => new(
+        "User.NotFound",
+        $"No user with the ID '{id}' was found.",
+        ErrorType.NotFound);
 }

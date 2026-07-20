@@ -1,4 +1,5 @@
 using FluentValidation;
+using GameHub.Application.Users.GetUser;
 using GameHub.Application.Users.RegisterUser;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +12,7 @@ public static class DependencyInjection
         // Scoped: the handler depends on IUserRepository, which is scoped.
         // A service must never outlive its dependencies.
         services.AddScoped<RegisterUserHandler>();
+        services.AddScoped<GetUserHandler>();
 
         // Registers every AbstractValidator in this assembly (e.g.
         // RegisterUserCommandValidator) as IValidator<T> for injection.

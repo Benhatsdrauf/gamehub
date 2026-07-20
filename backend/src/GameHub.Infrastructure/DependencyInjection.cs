@@ -1,6 +1,7 @@
 using GameHub.Application.Abstractions.Security;
 using GameHub.Application.Users;
 using GameHub.Infrastructure.Persistence;
+using GameHub.Infrastructure.Persistence.Queries;
 using GameHub.Infrastructure.Persistence.Repositories;
 using GameHub.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -19,8 +20,9 @@ public static class DependencyInjection
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection")));
 
-        // Scoped: depends on the DbContext, which is itself scoped to one request.
+        // Scoped: both depend on the DbContext, which is itself scoped to one request.
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserQueries, UserQueries>();
 
         // Singleton: stateless and thread-safe, so one instance can serve every request.
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
