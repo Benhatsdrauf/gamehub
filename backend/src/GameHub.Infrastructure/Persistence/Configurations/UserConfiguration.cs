@@ -40,9 +40,11 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         // Indexes
         builder.HasIndex(u => u.Username)
-            .IsUnique();
+            .IsUnique()
+            .HasDatabaseName(UserConstraintNames.UniqueUsername);
 
         builder.HasIndex(u => u.Email)
-            .IsUnique();
+            .IsUnique()
+            .HasDatabaseName(UserConstraintNames.UniqueEmail);
     }
 }

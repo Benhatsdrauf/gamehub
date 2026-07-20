@@ -8,4 +8,9 @@ public static class UserErrors
         "User.EmailNotUnique",
         $"A user with the email '{email}' already exists.",
         ErrorType.Conflict);
+
+    public static Error UsernameNotUnique(string username) => new(
+        "User.UsernameNotUnique",
+        $"A user with the username '{username}' already exists.",
+        ErrorType.Conflict);
 }
