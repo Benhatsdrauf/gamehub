@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GameHub.Infrastructure\GameHub.Infrastructure.csproj" />
+    <ProjectReference Include="..\GameHub.Application\GameHub.Application.csproj" />
   </ItemGroup>
 
 </Project>
