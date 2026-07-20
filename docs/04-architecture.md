@@ -200,6 +200,28 @@ The Domain layer never depends on any outer layer.
 
 ---
 
+# Pagination
+
+List endpoints never return an unbounded result set — they return a bounded page
+wrapped in a `PagedResponse<T>` envelope (`items`, `page`, `pageSize`,
+`totalCount`, `totalPages`).
+
+**Chosen strategy: offset pagination** (`?page=&pageSize=`).
+
+**Why:** the current list endpoints (starting with `GET /api/users`) are
+admin/moderation screens, where users expect page numbers, a total count, and the
+ability to jump to any page — offset's strengths. Its weaknesses (slow deep
+offsets, drift under concurrent writes) do not matter at admin-scale data.
+Keyset/cursor pagination is reserved for a later, genuinely different access
+pattern (e.g. a public infinite-scroll feed).
+
+Paging input is clamped in the handler (`page >= 1`, `pageSize` in `[1, 100]`,
+default `20`) so a client cannot request an unbounded page.
+
+See `08-pagination.md` for the full offset-vs-keyset comparison and rationale.
+
+---
+
 # Technology Stack
 
 ## Backend
