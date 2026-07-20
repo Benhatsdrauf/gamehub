@@ -187,6 +187,28 @@ Patterns will be introduced only when they solve a real problem.
 | Builder | Complex Game Creation |
 | Adapter | External APIs |
 | Decorator | Logging & Caching |
+| Mediator | Command/query dispatch + validation & logging pipeline |
+
+### Milestone: In-house Mediator
+
+Controllers currently call handlers directly. MediatR was deliberately **not**
+adopted — it is now a paid dependency for newer versions, and direct calls keep
+the wiring explicit while there is only one handler.
+
+**Trigger:** when the 3rd–4th handler repeats the same cross-cutting boilerplate
+(validation, logging) at the top of `Handle`, extract a minimal in-house mediator
+instead of copy-pasting.
+
+**Plan (~40–60 lines, no paid dependency):**
+
+1. Introduce `ICommandHandler<TCommand, TResult>` so handlers share a shape.
+2. Add a small `Dispatcher` that resolves a command's handler from DI.
+3. Add pipeline behaviors (e.g. a `ValidationBehavior`) that wrap the handler.
+4. Move the current in-handler validation block into `ValidationBehavior`,
+   thinning every handler.
+
+Free alternative if we choose not to build our own: `martinothamar/Mediator`
+(MIT, source-generator based). Verify licensing before adopting anything.
 
 ---
 
