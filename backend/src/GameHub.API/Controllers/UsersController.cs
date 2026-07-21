@@ -5,10 +5,15 @@ using GameHub.Application.Users.GetUser;
 using GameHub.Application.Users.GetUsers;
 using GameHub.Application.Users.RegisterUser;
 using GameHub.Application.Users.UpdateUser;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameHub.API.Controllers;
 
+// Managing users (list/get/update/delete) is an admin/moderation surface. The base
+// [Authorize] already requires a token; this narrows it to the Admin role. Register
+// is the exception below — public self-signup via [AllowAnonymous].
+[Authorize(Roles = "Admin")]
 public sealed class UsersController : ApiController
 {
     private readonly ISender _sender;
@@ -18,6 +23,7 @@ public sealed class UsersController : ApiController
         _sender = sender;
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> Register(
         RegisterUserRequest request,

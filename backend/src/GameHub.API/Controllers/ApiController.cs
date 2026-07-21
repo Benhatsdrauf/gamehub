@@ -1,10 +1,15 @@
 using GameHub.Application.Common.Errors;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameHub.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+// Secure by default: every controller inheriting ApiController requires a valid
+// token. Endpoints that must be reachable without one opt out with [AllowAnonymous];
+// endpoints needing more than "authenticated" add their own [Authorize(Roles = ...)].
+[Authorize]
 public abstract class ApiController : ControllerBase
 {
     // The single, shared place that turns an application-layer Error into an
