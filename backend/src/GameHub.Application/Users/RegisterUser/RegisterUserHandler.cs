@@ -1,23 +1,20 @@
-using FluentValidation;
 using GameHub.Application.Abstractions.Security;
-using GameHub.Application.Common.Errors;
+using GameHub.Application.Common.Messaging;
 using GameHub.Application.Common.Results;
 using GameHub.Domain.Users;
 
 namespace GameHub.Application.Users.RegisterUser;
 
 public sealed class RegisterUserHandler
+    : ICommandHandler<RegisterUserCommand, Result<RegisterUserResponse>>
 {
-    private readonly IValidator<RegisterUserCommand> _validator;
     private readonly IUserRepository _users;
     private readonly IPasswordHasher _passwordHasher;
 
     public RegisterUserHandler(
-        IValidator<RegisterUserCommand> validator,
         IUserRepository users,
         IPasswordHasher passwordHasher)
     {
-        _validator = validator;
         _users = users;
         _passwordHasher = passwordHasher;
     }
@@ -26,18 +23,7 @@ public sealed class RegisterUserHandler
         RegisterUserCommand command,
         CancellationToken cancellationToken = default)
     {
-        var validation = await _validator.ValidateAsync(command, cancellationToken);
-        if (!validation.IsValid)
-        {
-            var errors = validation.Errors
-                .GroupBy(failure => failure.PropertyName)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Select(failure => failure.ErrorMessage).ToArray());
-
-            return Result.Failure<RegisterUserResponse>(new ValidationError(errors));
-        }
-
+        // Validation now runs in ValidationBehavior before this handler is reached.
         if (await _users.EmailExistsAsync(command.Email, cancellationToken))
             return Result.Failure<RegisterUserResponse>(UserErrors.EmailNotUnique(command.Email));
 

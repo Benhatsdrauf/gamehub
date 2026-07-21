@@ -1,9 +1,11 @@
+using GameHub.Application.Common.Messaging;
 using GameHub.Application.Common.Pagination;
 using GameHub.Application.Common.Results;
 
 namespace GameHub.Application.Users.GetUsers;
 
 public sealed class GetUsersHandler
+    : IQueryHandler<GetUsersQuery, Result<PagedResponse<UserListItem>>>
 {
     private const int DefaultPageSize = 20;
     private const int MaxPageSize = 100;

@@ -1,16 +1,17 @@
 using GameHub.API.Contracts.Auth;
 using GameHub.Application.Authentication.Login;
+using GameHub.Application.Common.Messaging;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameHub.API.Controllers;
 
 public sealed class AuthController : ApiController
 {
-    private readonly LoginHandler _loginHandler;
+    private readonly ISender _sender;
 
-    public AuthController(LoginHandler loginHandler)
+    public AuthController(ISender sender)
     {
-        _loginHandler = loginHandler;
+        _sender = sender;
     }
 
     [HttpPost("login")]
@@ -20,7 +21,7 @@ public sealed class AuthController : ApiController
     {
         var command = new LoginCommand(request.Email, request.Password);
 
-        var result = await _loginHandler.Handle(command, cancellationToken);
+        var result = await _sender.Send(command, cancellationToken);
 
         return result.IsSuccess
             ? Ok(result.Value)

@@ -1,17 +1,15 @@
-using FluentValidation;
-using GameHub.Application.Common.Errors;
+using GameHub.Application.Common.Messaging;
 using GameHub.Application.Common.Results;
 
 namespace GameHub.Application.Users.UpdateUser;
 
 public sealed class UpdateUserHandler
+    : ICommandHandler<UpdateUserCommand, Result<UpdateUserResponse>>
 {
-    private readonly IValidator<UpdateUserCommand> _validator;
     private readonly IUserRepository _users;
 
-    public UpdateUserHandler(IValidator<UpdateUserCommand> validator, IUserRepository users)
+    public UpdateUserHandler(IUserRepository users)
     {
-        _validator = validator;
         _users = users;
     }
 
@@ -19,18 +17,7 @@ public sealed class UpdateUserHandler
         UpdateUserCommand command,
         CancellationToken cancellationToken = default)
     {
-        var validation = await _validator.ValidateAsync(command, cancellationToken);
-        if (!validation.IsValid)
-        {
-            var errors = validation.Errors
-                .GroupBy(failure => failure.PropertyName)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Select(failure => failure.ErrorMessage).ToArray());
-
-            return Result.Failure<UpdateUserResponse>(new ValidationError(errors));
-        }
-
+        // Validation now runs in ValidationBehavior before this handler is reached.
         // Load the tracked entity — the write side, not IUserQueries (which returns a DTO).
         var user = await _users.GetByIdAsync(command.Id, cancellationToken);
         if (user is null)

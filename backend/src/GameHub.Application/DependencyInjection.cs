@@ -1,10 +1,5 @@
 using FluentValidation;
-using GameHub.Application.Authentication.Login;
-using GameHub.Application.Users.DeleteUser;
-using GameHub.Application.Users.GetUser;
-using GameHub.Application.Users.GetUsers;
-using GameHub.Application.Users.RegisterUser;
-using GameHub.Application.Users.UpdateUser;
+using GameHub.Application.Common.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameHub.Application;
@@ -13,19 +8,44 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // Scoped: the handler depends on IUserRepository, which is scoped.
-        // A service must never outlive its dependencies.
-        services.AddScoped<RegisterUserHandler>();
-        services.AddScoped<GetUserHandler>();
-        services.AddScoped<GetUsersHandler>();
-        services.AddScoped<UpdateUserHandler>();
-        services.AddScoped<DeleteUserHandler>();
-        services.AddScoped<LoginHandler>();
-
         // Registers every AbstractValidator in this assembly (e.g.
-        // RegisterUserCommandValidator) as IValidator<T> for injection.
+        // RegisterUserCommandValidator) as IValidator<T>. Consumed by ValidationBehavior.
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
+        // The mediator dispatcher. Scoped so the IServiceProvider it captures is the
+        // request scope — a singleton would capture the root provider and fail to
+        // resolve scoped handlers (captive dependency).
+        services.AddScoped<ISender, Sender>();
+
+        // Pipeline behaviors, in execution order (first registered = outermost).
+        // Validation runs before every handler; more behaviors (logging, timing) slot in here.
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+        // Auto-register every IRequestHandler<,> in this assembly, so adding a handler
+        // never means editing this file again.
+        services.AddRequestHandlers();
+
         return services;
+    }
+
+    // Scans the Application assembly for concrete classes that implement
+    // IRequestHandler<TRequest, TResponse> and registers each under its closed
+    // interface, e.g. IRequestHandler<RegisterUserCommand, Result<RegisterUserResponse>>.
+    private static void AddRequestHandlers(this IServiceCollection services)
+    {
+        var assembly = typeof(DependencyInjection).Assembly;
+
+        foreach (var type in assembly.GetTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+                continue;
+
+            var handlerInterfaces = type.GetInterfaces()
+                .Where(i => i.IsGenericType
+                    && i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
+
+            foreach (var handlerInterface in handlerInterfaces)
+                services.AddScoped(handlerInterface, type);
+        }
     }
 }
