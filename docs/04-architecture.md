@@ -250,6 +250,25 @@ See `10-authentication-jwt.md` for the full JWT model and decisions, and
 
 ---
 
+# Application Messaging (in-house mediator)
+
+Controllers do not call handlers directly. They inject one dispatcher, `ISender`,
+and send a command or query; the mediator resolves the matching handler and runs
+the request through a **pipeline of behaviors** first. This decouples controllers
+from handlers and gives cross-cutting concerns (currently validation, via
+`ValidationBehavior`) a single home instead of duplicated code in every handler.
+
+It is a hand-built ~100-line equivalent of MediatR / `@nestjs/cqrs` (MediatR is now
+paid). Handlers are auto-registered by assembly scan, so a new slice is just a
+command/query + a handler — no DI wiring. See `12-mediator.md` for the full design.
+
+Endpoints are **secure by default**: `[Authorize]` on the `ApiController` base
+requires a token everywhere; `[AllowAnonymous]` opts specific endpoints out (login,
+public registration), and `[Authorize(Roles = "Admin")]` narrows the
+admin/moderation surface (user management).
+
+---
+
 # Technology Stack
 
 ## Backend
