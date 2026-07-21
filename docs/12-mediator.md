@@ -85,6 +85,32 @@ For each request it:
 The handlers no longer contain any validation code — the ~10-line block that used to
 be duplicated in Register, Update, and Login is gone.
 
+### Where the validators come from
+
+The behavior contains **no rules**. Each command that needs validation still has its
+own validator class — the rules did not move or centralize; only the code that *runs*
+them did. Three links connect a validator to the behavior, all via DI:
+
+1. **The validator declares its command.**
+   `RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>` — one per
+   command that needs it (Register, Update, Login today). These are the FluentValidation
+   equivalents of a Zod schema per input shape.
+2. **The assembly scan registers them all.** `AddValidatorsFromAssembly(...)` registers
+   every `AbstractValidator<T>` under `IValidator<T>`, e.g.
+   `IValidator<RegisterUserCommand>` → `RegisterUserCommandValidator`.
+3. **The behavior asks DI for the validators of *this* request.** Its constructor takes
+   `IEnumerable<IValidator<TRequest>>`. When the pipeline runs for a `RegisterUserCommand`,
+   `TRequest` is `RegisterUserCommand`, so DI injects exactly that command's validator(s).
+   The behavior never names a specific validator.
+
+```
+Send(RegisterUserCommand) → IEnumerable<IValidator<RegisterUserCommand>> = [RegisterUserCommandValidator] → runs it
+Send(GetUserQuery)        → IEnumerable<IValidator<GetUserQuery>>        = []  → nothing to run → straight to handler
+```
+
+So queries with no validator class (GetUser, GetUsers, Delete) flow straight through.
+Add a validator class later and it is picked up automatically — nothing else changes.
+
 ### The one subtlety: building a failure generically
 
 The behavior is generic over `TResponse`, but a failure has to be a `Result`. We
