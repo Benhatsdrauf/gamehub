@@ -19,6 +19,13 @@ public sealed class UserRepository : IUserRepository
         // are detected and persisted on SaveChanges.
         _dbContext.Users.FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
 
+    public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default) =>
+        // AsNoTracking: login only reads the user to verify the password; it never
+        // mutates it, so EF can skip building a change-tracking snapshot.
+        _dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(user => user.Email == email, cancellationToken);
+
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
         _dbContext.Users.Add(user);

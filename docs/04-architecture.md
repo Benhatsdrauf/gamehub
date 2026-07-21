@@ -222,6 +222,34 @@ See `08-pagination.md` for the full offset-vs-keyset comparison and rationale.
 
 ---
 
+# Authentication
+
+Authentication is **stateless, JWT-based**. `POST /api/auth/login` verifies
+credentials (bcrypt) and issues a signed access token; the client sends it as
+`Authorization: Bearer <token>` and the server trusts it by verifying the
+signature — no session store, no per-request database lookup.
+
+The layering follows the same Ports & Adapters rule as the rest of the app:
+
+- **Application** owns the *what*: the `IJwtTokenGenerator` port (twin of
+  `IPasswordHasher`), the `Login` slice, and `AuthErrors.InvalidCredentials`.
+  It knows nothing about the JWT library.
+- **Infrastructure** owns the *how*: `JwtTokenGenerator` (the only file that
+  touches the JWT library) and `JwtSettings` (typed `Jwt` config).
+- **API** owns the *wiring*: `AuthController` plus the JwtBearer middleware in
+  `Program.cs` that validates incoming tokens and sets `HttpContext.User`
+  (`UseAuthentication()` before `UseAuthorization()`).
+
+Key decisions: a **vague 401** on any credential failure (no user enumeration),
+and **role carried in the token** as a login-time snapshot (fast, stateless
+authorization) with a short token lifetime to bound staleness. A refresh-token
+flow is a planned future slice.
+
+See `10-authentication-jwt.md` for the full JWT model and decisions, and
+`11-secrets-and-configuration.md` for the signing secret.
+
+---
+
 # Technology Stack
 
 ## Backend

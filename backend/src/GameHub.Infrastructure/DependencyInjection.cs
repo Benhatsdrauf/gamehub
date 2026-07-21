@@ -7,6 +7,7 @@ using GameHub.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace GameHub.Infrastructure;
 
@@ -26,6 +27,12 @@ public static class DependencyInjection
 
         // Singleton: stateless and thread-safe, so one instance can serve every request.
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+
+        // Bind the "Jwt" config section to JwtSettings, injectable as IOptions<JwtSettings>.
+        services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+
+        // Singleton: also stateless — it only reads settings and signs strings.
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
         return services;
     }
