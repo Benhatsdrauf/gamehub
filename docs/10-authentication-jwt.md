@@ -133,13 +133,15 @@ which is what makes a short access-token lifetime practical.
 
 ---
 
-## Known refinements (deliberately deferred)
+## Refinements
 
-- **Timing side-channel** (`LoginHandler`, `TODO(timing)`): the unknown-email path
-  returns immediately while the found-user path runs bcrypt (slow by design), so
-  response timing can still leak whether an email exists. Fix: run a throwaway
-  verify against a fixed dummy hash on the null-user path to equalize timing.
-- **Email case-sensitivity**: `GetByEmailAsync` matches exactly, and registration
+- **Timing side-channel — DONE.** The unknown-email path used to return immediately
+  while the found-user path ran bcrypt (slow by design), so response timing could leak
+  whether an email existed. `LoginHandler` now runs a throwaway `Verify` against a fixed
+  dummy hash (`DummyPasswordHash`, work factor 12) on the null-user path, so both
+  credential-failure paths cost roughly the same. Measured: unknown-email ≈ wrong-password
+  ≈ 0.26s; a validation failure (no bcrypt) ≈ 0.006s.
+- **Email case-sensitivity** (still deferred): `GetByEmailAsync` matches exactly, and registration
   stores the email as typed (trimmed). `Ben@x.com` cannot log in as `ben@x.com`.
   The whole app is consistently case-sensitive on email today; normalizing is its
   own future change across register + login.
