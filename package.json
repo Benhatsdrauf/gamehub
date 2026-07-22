@@ -1,0 +1,13 @@
+{
+  "name": "gamehub",
+  "private": true,
+  "description": "Root scripts to run the full stack via Docker Compose.",
+  "scripts": {
+    "dev": "docker compose -f compose.dev.yaml up",
+    "dev:down": "docker compose -f compose.dev.yaml down",
+    "prod": "docker compose up --build",
+    "prod:down": "docker compose down",
+    "db": "docker compose up -d db",
+    "down": "docker compose -f compose.dev.yaml down; docker compose down"
+  }
+}

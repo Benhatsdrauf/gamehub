@@ -7,10 +7,13 @@ either a production-like or a hot-reload dev mode.
 
 ## Two workflows, two commands
 
-| | Command | Frontend | Backend | Hot reload? |
-|---|---|---|---|---|
-| **Production** | `docker compose up --build` | nginx serving the built bundle | published, slim runtime | no |
-| **Dev** | `docker compose -f compose.dev.yaml up` | Vite dev server (HMR) | `dotnet watch` | **yes** |
+| | Command | Shortcut | Frontend | Backend | Hot reload? |
+|---|---|---|---|---|---|
+| **Production** | `docker compose up --build` | `pnpm prod` | nginx serving the built bundle | published, slim runtime | no |
+| **Dev** | `docker compose -f compose.dev.yaml up` | `pnpm dev` | Vite dev server (HMR) | `dotnet watch` | **yes** |
+
+The root `package.json` wraps these in scripts: `pnpm dev` / `pnpm prod`, plus
+`pnpm db` (just Postgres, for native dev) and `pnpm down` (stop everything).
 
 Both bring up all three services. Ports are the same either way:
 **web** `:5173` (dev) / `:3000` (prod) · **api** `:5206` · **db** `:5432`.
