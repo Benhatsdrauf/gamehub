@@ -122,14 +122,15 @@ needs **zero DB lookups** — the main performance win of JWT. The cost is
 **staleness**: the token is a snapshot from login, so demoting an admin does not
 take effect until their token expires. Mitigations, in order of what we use:
 
-1. **Short access-token lifetime** (`AccessTokenMinutes = 60`) shrinks the window.
+1. **Short access-token lifetime** (`AccessTokenMinutes = 15`) shrinks the window.
 2. **DB re-check for genuinely sensitive actions only** — pay the query where it matters.
 3. (Alternative design) token carries only `sub`, authorize by loading the user
    every request — always current, but reintroduces per-request state. Reserved
    for cases needing instant revocation.
 
-A **refresh-token** flow (future slice) re-mints the token with fresh claims,
-which is what makes a short access-token lifetime practical.
+The **refresh-token** flow (implemented — see `14-refresh-tokens.md`) is what makes
+a short access-token lifetime practical: the client silently gets a new access
+token every 15 minutes without re-login, so the short window costs no UX.
 
 ---
 

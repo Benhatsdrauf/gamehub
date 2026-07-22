@@ -242,11 +242,15 @@ The layering follows the same Ports & Adapters rule as the rest of the app:
 
 Key decisions: a **vague 401** on any credential failure (no user enumeration),
 and **role carried in the token** as a login-time snapshot (fast, stateless
-authorization) with a short token lifetime to bound staleness. A refresh-token
-flow is a planned future slice.
+authorization) with a short (15 min) token lifetime to bound staleness.
 
-See `10-authentication-jwt.md` for the full JWT model and decisions, and
-`11-secrets-and-configuration.md` for the signing secret.
+Sessions are extended by a **refresh token** — stored (only as a hash), revocable,
+rotated on every use with reuse detection — via `POST /auth/refresh`, and ended by
+`POST /auth/logout`. This is the system's real revocation mechanism (a stateless
+access token cannot be revoked; it just expires quickly).
+
+See `10-authentication-jwt.md` for the JWT model, `14-refresh-tokens.md` for the
+refresh flow, and `11-secrets-and-configuration.md` for the signing secret.
 
 ---
 
