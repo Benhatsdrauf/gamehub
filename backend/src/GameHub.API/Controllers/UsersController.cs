@@ -3,6 +3,7 @@ using GameHub.Application.Common.Messaging;
 using GameHub.Application.Users.DeleteUser;
 using GameHub.Application.Users.GetUser;
 using GameHub.Application.Users.GetUsers;
+using GameHub.Application.Users.PromoteUser;
 using GameHub.Application.Users.RegisterUser;
 using GameHub.Application.Users.UpdateUser;
 using Microsoft.AspNetCore.Authorization;
@@ -83,6 +84,16 @@ public sealed class UsersController : ApiController
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var result = await _sender.Send(new DeleteUserCommand(id), cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(result.Error);
+    }
+
+    [HttpPost("{id:guid}/promote")]
+    public async Task<IActionResult> Promote(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new PromoteUserCommand(id), cancellationToken);
 
         return result.IsSuccess
             ? NoContent()
