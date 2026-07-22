@@ -16,7 +16,12 @@ export function setAuthFailureHandler(handler: (() => void) | null): void {
 // consume a token and the second would look like reuse (theft) and nuke the session.
 let refreshInFlight: Promise<boolean> | null = null
 
-function ensureRefreshed(): Promise<boolean> {
+// Single-flight refresh. Exported so the startup silent-refresh (AuthProvider) shares
+// the SAME in-flight promise as the interceptor. This matters because React StrictMode
+// runs effects twice in dev: without sharing, two /refresh calls fire with the same
+// token, the second looks like a replay of a rotated token, and reuse detection nukes
+// the whole session on every reload.
+export function refreshSession(): Promise<boolean> {
   const refreshToken = tokenStore.getRefresh()
   if (!refreshToken) return Promise.resolve(false)
 
@@ -48,7 +53,7 @@ async function apiFetch(path: string, options: RequestInit, allowRetry = true): 
   const response = await fetch(`${API_URL}${path}`, { ...options, headers })
 
   if (response.status === 401 && allowRetry && tokenStore.getRefresh()) {
-    const refreshed = await ensureRefreshed()
+    const refreshed = await refreshSession()
     if (refreshed) return apiFetch(path, options, false)
     authFailureHandler?.()
   }

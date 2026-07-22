@@ -6,8 +6,8 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { loginRequest, logoutRequest, refreshRequest } from '@/lib/api/auth'
-import { setAuthFailureHandler } from '@/lib/api/client'
+import { loginRequest, logoutRequest } from '@/lib/api/auth'
+import { refreshSession, setAuthFailureHandler } from '@/lib/api/client'
 import { decodeAccessToken } from '@/lib/auth/jwt'
 import { tokenStore } from '@/lib/auth/tokenStore'
 
@@ -54,15 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthFailureHandler(clearSession)
 
     // Startup: the access token was lost on reload, but if a refresh token survived in
-    // localStorage, silently mint a new access token so the session continues.
-    const refreshToken = tokenStore.getRefresh()
-    if (refreshToken) {
-      refreshRequest(refreshToken)
-        .then((tokens) => {
-          tokenStore.setTokens(tokens.accessToken, tokens.refreshToken)
-          setUser(userFromAccessToken())
-        })
-        .catch(() => clearSession())
+    // localStorage, silently mint a new access token so the session continues. Uses the
+    // shared single-flight refresh so StrictMode's double-invoke doesn't fire two
+    // /refresh calls (which reuse detection would treat as theft).
+    if (tokenStore.getRefresh()) {
+      refreshSession()
+        .then((ok) => (ok ? setUser(userFromAccessToken()) : clearSession()))
         .finally(() => setIsBootstrapping(false))
     } else {
       setIsBootstrapping(false)
