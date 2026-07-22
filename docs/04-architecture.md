@@ -269,6 +269,21 @@ admin/moderation surface (user management).
 
 ---
 
+# Testing
+
+Two layers. **Unit tests** (fast, no DB/HTTP) prove a class's logic with its
+dependencies faked — handlers test cleanly because they depend only on interfaces
+(the Ports & Adapters payoff), and validators test with no setup at all.
+**Integration tests** (planned, not yet built) fire real HTTP through the whole
+stack — routing, `[Authorize]`, the mediator, EF, Postgres — to catch wiring that
+mocks cannot.
+
+Stack: **xUnit** + **NSubstitute** (mocking) + plain xUnit **`Assert`**. We avoid
+FluentAssertions (commercial since v8) and Moq (SponsorLink episode) — the same
+avoid-paid-defaults instinct behind the in-house mediator. See `13-testing.md`.
+
+---
+
 # Technology Stack
 
 ## Backend
