@@ -45,6 +45,19 @@ builder.Services
         };
     });
 
+// CORS: the SPA runs on a different origin (e.g. http://localhost:5173) than the API,
+// so the browser blocks its requests unless the API opts that origin in. We use Bearer
+// tokens in the Authorization header (not cookies), so no AllowCredentials is needed.
+const string SpaCorsPolicy = "GameHubSpa";
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(SpaCorsPolicy, policy =>
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -57,6 +70,10 @@ if (app.Environment.IsDevelopment())
     // Interactive API testing UI (Development only), served at /scalar.
     app.MapScalarApiReference();
 }
+
+// CORS must run before auth so preflight (OPTIONS) requests are answered and the
+// right headers are attached to responses.
+app.UseCors(SpaCorsPolicy);
 
 // Order matters: authentication reads the token and sets HttpContext.User;
 // authorization then decides if that user may proceed. Identify, then permit.
