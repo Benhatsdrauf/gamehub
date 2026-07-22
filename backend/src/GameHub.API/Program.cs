@@ -75,6 +75,12 @@ if (app.Configuration.GetValue<bool>("RunMigrationsOnStartup"))
     dbContext.Database.Migrate();
 }
 
+// Dev convenience: create a default admin so a fresh database is usable immediately.
+if (app.Configuration.GetValue<bool>("SeedAdmin"))
+{
+    await DatabaseSeeder.SeedAdminAsync(app.Services, app.Configuration);
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

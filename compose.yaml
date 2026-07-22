@@ -33,6 +33,11 @@ services:
       Jwt__Secret: "dev-only-insecure-jwt-secret-change-me-please-0123456789"
       # Build the schema on first boot against the fresh container database.
       RunMigrationsOnStartup: "true"
+      # Seed a default admin so the fresh database is usable immediately (dev only).
+      SeedAdmin: "true"
+      Seed__AdminEmail: "admin@gamehub.local"
+      Seed__AdminUsername: "admin"
+      Seed__AdminPassword: "Admin123!"
       # Allow both the containerized web (3000) and a native `pnpm dev` (5173).
       Cors__AllowedOrigins__0: "http://localhost:3000"
       Cors__AllowedOrigins__1: "http://localhost:5173"

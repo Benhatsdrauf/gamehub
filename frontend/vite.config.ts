@@ -17,4 +17,13 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
+  server: {
+    // Listen on all interfaces so the dev server is reachable when run in a container.
+    host: true,
+    watch: {
+      // File-change events don't cross Docker bind mounts reliably on macOS/Windows,
+      // so poll when running in the dev container (VITE_USE_POLLING=true).
+      usePolling: process.env.VITE_USE_POLLING === 'true',
+    },
+  },
 })

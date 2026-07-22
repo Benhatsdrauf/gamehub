@@ -1,0 +1,83 @@
+# Dev stack with HOT RELOAD — backend via `dotnet watch`, frontend via Vite HMR.
+# Run:  docker compose -f compose.dev.yaml up
+#   web → http://localhost:5173   api → http://localhost:5206   db → localhost:5432
+#
+# Uses stock SDK/node images with your source bind-mounted (no image build), so edits
+# on the host trigger a rebuild/refresh inside the container. First `up` is slower
+# (restore + pnpm install); after that, saves hot-reload.
+name: gamehub-dev
+
+services:
+  db:
+    image: postgres:17
+    container_name: gamehub-postgres-dev
+    environment:
+      POSTGRES_DB: gamehub
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gamehub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: gamehub-api-dev
+    working_dir: /src
+    depends_on:
+      db:
+        condition: service_healthy
+    command: dotnet watch --non-interactive --project src/GameHub.API/GameHub.API.csproj run --no-launch-profile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://0.0.0.0:8080"
+      # Poll for file changes — inotify events don't cross bind mounts reliably on macOS/Windows.
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=gamehub;Username=postgres;Password=postgres"
+      Jwt__Secret: "dev-only-insecure-jwt-secret-change-me-please-0123456789"
+      RunMigrationsOnStartup: "true"
+      SeedAdmin: "true"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:3000"
+    volumes:
+      - ./backend:/src
+      # Keep build output container-only so host (macOS) and container (linux) artifacts
+      # don't overwrite each other.
+      - /src/src/GameHub.API/bin
+      - /src/src/GameHub.API/obj
+      - /src/src/GameHub.Application/bin
+      - /src/src/GameHub.Application/obj
+      - /src/src/GameHub.Domain/bin
+      - /src/src/GameHub.Domain/obj
+      - /src/src/GameHub.Infrastructure/bin
+      - /src/src/GameHub.Infrastructure/obj
+      - dev-nuget:/root/.nuget/packages
+    ports:
+      - "5206:8080"
+
+  web:
+    image: node:22-alpine
+    container_name: gamehub-web-dev
+    working_dir: /app
+    depends_on:
+      - api
+    command: sh -c "npm install -g pnpm@latest && pnpm install && pnpm dev"
+    environment:
+      VITE_API_URL: "http://localhost:5206/api"
+      VITE_USE_POLLING: "true"
+    volumes:
+      - ./frontend:/app
+      # Container-only node_modules (linux/musl binaries), not the host's.
+      - dev-node-modules:/app/node_modules
+    ports:
+      - "5173:5173"
+
+volumes:
+  postgres-data-dev:
+  dev-nuget:
+  dev-node-modules:
