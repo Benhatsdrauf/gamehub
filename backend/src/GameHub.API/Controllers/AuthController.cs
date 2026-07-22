@@ -1,5 +1,7 @@
 using GameHub.API.Contracts.Auth;
 using GameHub.Application.Authentication.Login;
+using GameHub.Application.Authentication.Logout;
+using GameHub.Application.Authentication.Refresh;
 using GameHub.Application.Common.Messaging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +29,32 @@ public sealed class AuthController : ApiController
 
         return result.IsSuccess
             ? Ok(result.Value)
+            : Problem(result.Error);
+    }
+
+    [AllowAnonymous]
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh(
+        RefreshRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new RefreshTokenCommand(request.RefreshToken), cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : Problem(result.Error);
+    }
+
+    [AllowAnonymous]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(
+        LogoutRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new LogoutCommand(request.RefreshToken), cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
             : Problem(result.Error);
     }
 }

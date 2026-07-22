@@ -18,6 +18,10 @@ public sealed class JwtSettings
     public string Audience { get; init; } = string.Empty;
 
     // How long an access token stays valid. Short, because the token is a snapshot
-    // of the user (see role staleness) — a refresh flow will re-mint it later.
+    // of the user (see role staleness) — the refresh flow re-mints it.
     public int AccessTokenMinutes { get; init; } = 60;
+
+    // How long a refresh token stays valid. Long-lived, but stored and revocable —
+    // rotation on each use effectively slides this window forward.
+    public int RefreshTokenDays { get; init; } = 7;
 }

@@ -17,15 +17,21 @@ public sealed class LoginHandler
     private readonly IUserRepository _users;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _tokenGenerator;
+    private readonly IRefreshTokenGenerator _refreshTokenGenerator;
+    private readonly IRefreshTokenRepository _refreshTokens;
 
     public LoginHandler(
         IUserRepository users,
         IPasswordHasher passwordHasher,
-        IJwtTokenGenerator tokenGenerator)
+        IJwtTokenGenerator tokenGenerator,
+        IRefreshTokenGenerator refreshTokenGenerator,
+        IRefreshTokenRepository refreshTokens)
     {
         _users = users;
         _passwordHasher = passwordHasher;
         _tokenGenerator = tokenGenerator;
+        _refreshTokenGenerator = refreshTokenGenerator;
+        _refreshTokens = refreshTokens;
     }
 
     public async Task<Result<LoginResponse>> Handle(
@@ -51,11 +57,18 @@ public sealed class LoginHandler
         if (!_passwordHasher.Verify(command.Password, user.PasswordHash))
             return Result.Failure<LoginResponse>(AuthErrors.InvalidCredentials);
 
-        var token = _tokenGenerator.GenerateAccessToken(user);
+        var accessToken = _tokenGenerator.GenerateAccessToken(user);
+
+        // Mint a fresh refresh token and persist it (only its hash is stored).
+        var refreshToken = _refreshTokenGenerator.Create(user.Id);
+        _refreshTokens.Add(refreshToken.Token);
+        await _refreshTokens.SaveChangesAsync(cancellationToken);
 
         var response = new LoginResponse(
-            token.Value,
-            token.ExpiresAtUtc,
+            accessToken.Value,
+            accessToken.ExpiresAtUtc,
+            refreshToken.RawToken,
+            refreshToken.Token.ExpiresAtUtc,
             user.Id,
             user.Username,
             user.Email,

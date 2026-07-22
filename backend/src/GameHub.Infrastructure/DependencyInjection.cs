@@ -1,4 +1,5 @@
 using GameHub.Application.Abstractions.Security;
+using GameHub.Application.Authentication;
 using GameHub.Application.Users;
 using GameHub.Infrastructure.Persistence;
 using GameHub.Infrastructure.Persistence.Queries;
@@ -24,9 +25,11 @@ public static class DependencyInjection
         // Scoped: both depend on the DbContext, which is itself scoped to one request.
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserQueries, UserQueries>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         // Singleton: stateless and thread-safe, so one instance can serve every request.
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IRefreshTokenGenerator, RefreshTokenGenerator>();
 
         // Bind the "Jwt" config section to JwtSettings, injectable as IOptions<JwtSettings>.
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));

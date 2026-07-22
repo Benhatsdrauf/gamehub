@@ -2,7 +2,9 @@ namespace GameHub.Application.Authentication.Login;
 
 public sealed record LoginResponse(
     string AccessToken,
-    DateTime ExpiresAtUtc,
+    DateTime AccessTokenExpiresAtUtc,
+    string RefreshToken,
+    DateTime RefreshTokenExpiresAtUtc,
     Guid UserId,
     string Username,
     string Email,

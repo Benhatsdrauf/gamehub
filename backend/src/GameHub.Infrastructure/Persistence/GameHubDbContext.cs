@@ -1,3 +1,4 @@
+using GameHub.Domain.Authentication;
 using GameHub.Domain.Games;
 using GameHub.Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,8 @@ public sealed class GameHubDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     public DbSet<DeveloperProfile> DeveloperProfiles => Set<DeveloperProfile>();
 

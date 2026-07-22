@@ -11,4 +11,11 @@ public static class AuthErrors
         "Auth.InvalidCredentials",
         "The email or password is incorrect.",
         ErrorType.Unauthorized);
+
+    // Also deliberately vague: never reveal whether the token is unknown, expired, or
+    // revoked. Maps to 401 via ApiController.Problem.
+    public static Error InvalidRefreshToken => new(
+        "Auth.InvalidRefreshToken",
+        "The refresh token is invalid or has expired.",
+        ErrorType.Unauthorized);
 }
