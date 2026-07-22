@@ -9,3 +9,14 @@ export function getUsers(page = 1, pageSize = 20): Promise<PagedUsers> {
 export function promoteUser(id: string): Promise<void> {
   return apiSend(`/users/${id}/promote`, { method: 'POST' })
 }
+
+export function updateUser(
+  id: string,
+  data: { username: string; email: string },
+): Promise<void> {
+  return apiSend(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+}
+
+export function deleteUser(id: string): Promise<void> {
+  return apiSend(`/users/${id}`, { method: 'DELETE' })
+}
