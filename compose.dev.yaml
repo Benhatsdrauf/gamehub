@@ -74,6 +74,8 @@ services:
       - ./frontend:/app
       # Container-only node_modules (linux/musl binaries), not the host's.
       - dev-node-modules:/app/node_modules
+      # Keep pnpm's store in a volume too, so it doesn't leak onto the host via the mount.
+      - dev-pnpm-store:/app/.pnpm-store
     ports:
       - "5173:5173"
 
@@ -81,3 +83,4 @@ volumes:
   postgres-data-dev:
   dev-nuget:
   dev-node-modules:
+  dev-pnpm-store:

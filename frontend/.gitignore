@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# pnpm store leaked from the dev container's bind mount (see compose.dev.yaml)
+.pnpm-store
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

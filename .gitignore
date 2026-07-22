@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Stray root lockfile (root package.json holds only scripts, no deps)
+/pnpm-lock.yaml
