@@ -1,0 +1,55 @@
+# One command runs the whole stack:  docker compose up --build
+#   web → http://localhost:3000   api → http://localhost:5206   db → localhost:5432
+services:
+  db:
+    image: postgres:17
+    container_name: gamehub-postgres
+    environment:
+      POSTGRES_DB: gamehub
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gamehub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    container_name: gamehub-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # Point at the db SERVICE (not localhost) — containers talk over the compose network.
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=gamehub;Username=postgres;Password=postgres"
+      # Dev-only secret: user-secrets isn't available in a container. NOT for production.
+      Jwt__Secret: "dev-only-insecure-jwt-secret-change-me-please-0123456789"
+      # Build the schema on first boot against the fresh container database.
+      RunMigrationsOnStartup: "true"
+      # Allow both the containerized web (3000) and a native `pnpm dev` (5173).
+      Cors__AllowedOrigins__0: "http://localhost:3000"
+      Cors__AllowedOrigins__1: "http://localhost:5173"
+    ports:
+      - "5206:8080"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        # Baked into the bundle at build time; the browser calls the API on this URL.
+        VITE_API_URL: "http://localhost:5206/api"
+    container_name: gamehub-web
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres-data:

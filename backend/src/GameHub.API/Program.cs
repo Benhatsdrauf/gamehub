@@ -1,8 +1,10 @@
 using System.Text;
 using GameHub.Application;
 using GameHub.Infrastructure;
+using GameHub.Infrastructure.Persistence;
 using GameHub.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
@@ -62,6 +64,16 @@ builder.Services.AddCors(options =>
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Apply pending EF migrations at startup when asked (the Docker compose stack sets
+// RunMigrationsOnStartup=true, so a fresh container database gets its schema without a
+// manual `dotnet ef database update`). Off by default for local runs.
+if (app.Configuration.GetValue<bool>("RunMigrationsOnStartup"))
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<GameHubDbContext>();
+    dbContext.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
